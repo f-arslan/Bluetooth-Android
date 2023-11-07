@@ -16,7 +16,7 @@ interface BTController {
     fun startDiscovery()
     fun stopDiscovery()
 
-    fun startBLEServer(): Flow<ConnectionResult>
+    fun startBTServer(): Flow<ConnectionResult>
     fun connectToDevice(device: BTDevice): Flow<ConnectionResult>
 
     suspend fun trySendMessage(message: String): BTMessage?
