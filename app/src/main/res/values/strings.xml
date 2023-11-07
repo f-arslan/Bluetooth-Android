@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Bluetooth</string>
+    <string name="title_activity_companion_device_pairing">CompanionDevicePairing</string>
 </resources>

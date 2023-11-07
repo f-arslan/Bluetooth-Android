@@ -10,6 +10,8 @@ import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.Build
+import android.util.Log
 import com.espressodev.bluetooth.data.BTController
 import com.espressodev.bluetooth.data.model.BTDevice
 import com.espressodev.bluetooth.data.model.BTMessage
@@ -99,22 +101,21 @@ class BTControllerImpl(private val context: Context) : BTController {
     }
 
     override fun startDiscovery() {
-        if (!hasPermission(Manifest.permission.BLUETOOTH_SCAN)) return
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasPermission(Manifest.permission.BLUETOOTH_SCAN)) return
         context.registerReceiver(foundDeviceReceiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
         updatePairedDevices()
         bluetoothAdapter?.startDiscovery()
     }
 
     override fun stopDiscovery() {
-        if (!hasPermission(Manifest.permission.BLUETOOTH_SCAN)) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasPermission(Manifest.permission.BLUETOOTH_SCAN)) return
 
         bluetoothAdapter?.cancelDiscovery()
     }
 
 
     override fun startBTServer(): Flow<ConnectionResult> = flow {
-        if (!hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) throw SecurityException("No BLUETOOTH_CONNECT permission")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) throw SecurityException("No BLUETOOTH_CONNECT permission")
 
         currentServerSocket = bluetoothAdapter?.listenUsingRfcommWithServiceRecord(
             "chat_service",
@@ -147,12 +148,10 @@ class BTControllerImpl(private val context: Context) : BTController {
     }.flowOn(Dispatchers.IO)
 
     override fun connectToDevice(device: BTDevice): Flow<ConnectionResult> = flow {
-        if (!hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) throw SecurityException("No BLUETOOTH_CONNECT permission")
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) throw SecurityException("No BLUETOOTH_CONNECT permission")
         currentClientSocket = bluetoothAdapter
             ?.getRemoteDevice(device.address)
             ?.createRfcommSocketToServiceRecord(UUID.fromString(SERVICE_UUID))
-
         stopDiscovery()
 
         currentClientSocket?.let { socket ->
@@ -178,7 +177,7 @@ class BTControllerImpl(private val context: Context) : BTController {
     }.flowOn(Dispatchers.IO)
 
     override suspend fun trySendMessage(message: String): BTMessage? {
-        if (!hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) return null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) return null
         if (dataTransferService == null) return null
 
         val btMessage = BTMessage(
@@ -205,10 +204,14 @@ class BTControllerImpl(private val context: Context) : BTController {
     }
 
     private fun updatePairedDevices() {
-        if (!hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) return
         bluetoothAdapter?.bondedDevices
-            ?.map { it.toBTDevice() }
-            ?.also { devices -> _pairedDevices.update { devices } }
+            ?.map {
+                it.toBTDevice()
+            }
+            ?.also {
+                devices -> _pairedDevices.update { devices }
+            }
     }
 
 

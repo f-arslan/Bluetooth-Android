@@ -1,5 +1,6 @@
 package com.espressodev.bluetooth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.espressodev.bluetooth.data.BTController
@@ -70,7 +71,10 @@ class BTViewModel @Inject constructor(
         }
     }
 
-    fun startScan(): Unit = btController.startDiscovery()
+    fun startScan(): Unit {
+        Log.d("BTViewModel", "startScan")
+        btController.startDiscovery()
+    }
 
     fun stopScan(): Unit = btController.stopDiscovery()
 

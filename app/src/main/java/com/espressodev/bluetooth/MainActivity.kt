@@ -3,9 +3,12 @@ package com.espressodev.bluetooth
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.Intent
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,37 +31,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val enableBluetoothLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { /* Not needed */ }
-
-        val permissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { perms ->
-            val canEnableBluetooth = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                perms[Manifest.permission.BLUETOOTH_CONNECT] == true
-            } else true
-
-            if(canEnableBluetooth && !isBluetoothEnabled) {
-                enableBluetoothLauncher.launch(
-                    Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                )
-            }
-        }
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_CONNECT,
-                )
-            )
-        }
-
         setContent {
             BluetoothTheme {
                 BTApp()
             }
         }
     }
+
+    fun isLocationEnabled(context: Context): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER
+        )
+    }
+
 }

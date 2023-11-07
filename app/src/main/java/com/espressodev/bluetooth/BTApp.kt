@@ -1,6 +1,7 @@
 package com.espressodev.bluetooth
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -95,7 +98,12 @@ fun DeviceSection(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Spacer(modifier = Modifier.weight(1f))
+        BTDeviceList(
+            pairedDevices = state.pairedDevices,
+            scannedDevices = state.scannedDevices,
+            onClick = onDeviceClick,
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        )
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -115,6 +123,51 @@ fun DeviceSection(
             Button(onClick = onStartServerClick, modifier = Modifier.fillMaxWidth()) {
                 Text(text = "Start the server for connection")
             }
+        }
+    }
+}
+
+@Composable
+fun BTDeviceList(
+    pairedDevices: List<BTDevice>,
+    scannedDevices: List<BTDevice>,
+    onClick: (BTDevice) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(modifier = modifier) {
+        item {
+            Text(
+                text = "Paired Devices",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+        items(pairedDevices) { device ->
+            Text(
+                text = device.name ?: "Unknown",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .clickable { onClick(device) }
+            )
+        }
+
+        item {
+            Text(
+                text = "Scanned Devices",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+
+        items(scannedDevices) { device ->
+            Text(
+                text = device.name ?: "Unknown",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .clickable { onClick(device) }
+            )
         }
     }
 }
