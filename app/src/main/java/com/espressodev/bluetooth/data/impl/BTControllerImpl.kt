@@ -15,6 +15,7 @@ import com.espressodev.bluetooth.data.model.BTDevice
 import com.espressodev.bluetooth.data.model.BTMessage
 import com.espressodev.bluetooth.data.model.ConnectionResult
 import com.espressodev.bluetooth.data.model.toBTDevice
+import com.espressodev.bluetooth.data.model.toByteArray
 import com.espressodev.bluetooth.receiver.BTStateReceiver
 import com.espressodev.bluetooth.receiver.FoundDeviceReceiver
 import kotlinx.coroutines.CoroutineScope
@@ -136,8 +137,8 @@ class BTControllerImpl(private val context: Context) : BTController {
 
                 emitAll(
                     service
-                    .listenIncomingMessages()
-                    .map { btMessage -> ConnectionResult.TransferSucceeded(btMessage) }
+                        .listenIncomingMessages()
+                        .map { btMessage -> ConnectionResult.TransferSucceeded(btMessage) }
                 )
             }
         }
@@ -177,11 +178,30 @@ class BTControllerImpl(private val context: Context) : BTController {
     }.flowOn(Dispatchers.IO)
 
     override suspend fun trySendMessage(message: String): BTMessage? {
-         
+        if (!hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) return null
+        if (dataTransferService == null) return null
+
+        val btMessage = BTMessage(
+            message = message,
+            senderName = bluetoothAdapter?.name ?: "Unknown name",
+            isFromLocalUser = true
+        )
+
+        dataTransferService?.sendMessage(btMessage.toByteArray())
+        return btMessage
     }
 
     override fun release() {
         context.unregisterReceiver(foundDeviceReceiver)
+        context.unregisterReceiver(btStateReceiver)
+        closeConnection()
+    }
+
+    override fun closeConnection() {
+        currentClientSocket?.close()
+        currentServerSocket?.close()
+        currentClientSocket = null
+        currentServerSocket = null
     }
 
     private fun updatePairedDevices() {
