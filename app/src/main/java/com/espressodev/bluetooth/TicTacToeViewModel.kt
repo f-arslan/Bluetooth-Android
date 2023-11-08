@@ -1,31 +1,35 @@
-package com.espressodev.bluetooth.viewmodel
+package com.espressodev.bluetooth
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.espressodev.bluetooth.BuildConfig.APPLICATION_ID
 import com.espressodev.bluetooth.domain.model.GameState
 import com.espressodev.bluetooth.domain.model.TicTacToe
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.google.android.gms.nearby.connection.AdvertisingOptions
-import com.google.android.gms.nearby.connection.ConnectionsClient
-import com.google.android.gms.nearby.connection.DiscoveryOptions
-import com.google.android.gms.nearby.connection.Strategy
-import java.util.*
-import com.espressodev.bluetooth.BuildConfig.APPLICATION_ID
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
 import com.google.android.gms.nearby.connection.ConnectionResolution
+import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
+import com.google.android.gms.nearby.connection.DiscoveryOptions
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import com.google.android.gms.nearby.connection.Strategy
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import java.util.UUID
+import javax.inject.Inject
 import kotlin.text.Charsets.UTF_8
 
-class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : ViewModel() {
+@HiltViewModel
+class TicTacToeViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
+    ViewModel() {
     private val localUsername = UUID.randomUUID().toString()
     private var localPlayer: Int = 0
     private var opponentPlayer: Int = 0
@@ -33,19 +37,15 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
 
     private var game = TicTacToe()
 
-    private val _state = MutableLiveData(GameState.Uninitialized)
-    val state: LiveData<GameState> = _state
+    private val _state = MutableStateFlow(GameState.Uninitialized)
+    val state = _state.asStateFlow()
 
     private val payloadCallback: PayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
             Log.d(TAG, "onPayloadReceived")
-
-            // 1
             if (payload.type == Payload.Type.BYTES) {
-                // 2
                 val position = payload.toPosition()
                 Log.d(TAG, "Received [${position.first},${position.second}] from $endpointId")
-                // 3
                 play(opponentPlayer, position)
             }
         }
@@ -79,12 +79,15 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
                     newGame()
                     TicTacToeRouter.navigateTo(Screen.Game)
                 }
+
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
                     Log.d(TAG, "ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED")
                 }
+
                 ConnectionsStatusCodes.STATUS_ERROR -> {
                     Log.d(TAG, "ConnectionsStatusCodes.STATUS_ERROR")
                 }
+
                 else -> {
                     Log.d(TAG, "Unknown status code ${resolution.status.statusCode}")
                 }
@@ -132,7 +135,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
             localPlayer = 1
             opponentPlayer = 2
         }.addOnFailureListener {
-            Log.d(TAG, "Unable to start advertising")
+            Log.d(TAG, "Unable to start advertising: $it")
             TicTacToeRouter.navigateTo(Screen.Home)
         }
     }
@@ -150,7 +153,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
             localPlayer = 2
             opponentPlayer = 1
         }.addOnFailureListener {
-            Log.d(TAG, "Unable to start discovering")
+            Log.d(TAG, "Unable to start discovering: $it")
             TicTacToeRouter.navigateTo(Screen.Home)
         }
     }
@@ -190,6 +193,7 @@ class TicTacToeViewModel(private val connectionsClient: ConnectionsClient) : Vie
         stopClient()
         super.onCleared()
     }
+
     fun goToHome() {
         stopClient()
         TicTacToeRouter.navigateTo(Screen.Home)

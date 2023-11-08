@@ -15,65 +15,65 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.espressodev.bluetooth.viewmodel.TicTacToeViewModel
+import com.espressodev.bluetooth.TicTacToeViewModel
 
 @Composable
 fun HostingScreen(
-  viewModel: TicTacToeViewModel
+    viewModel: TicTacToeViewModel
 ) {
-  BackHandler(onBack = {
-    viewModel.goToHome()
-  })
+    BackHandler(onBack = {
+        viewModel.goToHome()
+    })
 
-  WaitingScreen(
-    title = "Hosting...",
-    onStopClick = { viewModel.goToHome() }
-  )
+    WaitingScreen(
+        title = "Hosting...",
+        onStopClick = { viewModel.goToHome() }
+    )
 }
 
 @Composable
 fun DiscoveringScreen(
-  viewModel: TicTacToeViewModel
+    viewModel: TicTacToeViewModel
 ) {
-  BackHandler(onBack = {
-    viewModel.goToHome()
-  })
+    BackHandler(onBack = {
+        viewModel.goToHome()
+    })
 
-  WaitingScreen(
-    title = "Discovering...",
-    onStopClick = { viewModel.goToHome() }
-  )
+    WaitingScreen(
+        title = "Discovering...",
+        onStopClick = { viewModel.goToHome() }
+    )
 }
 
 @Composable
 fun WaitingScreen(
-  title: String,
-  onStopClick: () -> Unit
+    title: String,
+    onStopClick: () -> Unit
 ) {
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .padding(16.dp),
-    verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.CenterHorizontally
-  ) {
-    Text(text = title)
-    CircularProgressIndicator(
-      modifier = Modifier
-        .padding(16.dp)
-        .size(80.dp)
-    )
-    Button(
-      modifier = Modifier.fillMaxWidth(),
-      onClick = onStopClick
+    Column(
+        modifier = Modifier
+          .fillMaxSize()
+          .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Text(text = "Stop")
+        Text(text = title)
+        CircularProgressIndicator(
+            modifier = Modifier
+              .padding(16.dp)
+              .size(80.dp)
+        )
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onStopClick
+        ) {
+            Text(text = "Stop")
+        }
     }
-  }
 }
 
 @Preview
 @Composable
 fun WaitingScreenPreview() {
-  WaitingScreen(title = "Hosting...", onStopClick = {})
+    WaitingScreen(title = "Hosting...", onStopClick = {})
 }

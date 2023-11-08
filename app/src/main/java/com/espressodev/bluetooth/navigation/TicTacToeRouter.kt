@@ -5,10 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 sealed class Screen {
-    object Home : Screen()
-    object Hosting : Screen()
-    object Discovering : Screen()
-    object Game : Screen()
+    data object Home : Screen()
+    data object Hosting : Screen()
+    data object Discovering : Screen()
+    data object Game : Screen()
 }
 
 object TicTacToeRouter {

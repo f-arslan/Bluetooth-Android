@@ -9,10 +9,10 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.espressodev.bluetooth.screens.DiscoveringScreen
@@ -20,16 +20,10 @@ import com.espressodev.bluetooth.screens.GameScreen
 import com.espressodev.bluetooth.screens.HomeScreen
 import com.espressodev.bluetooth.screens.HostingScreen
 import com.espressodev.bluetooth.ui.theme.BluetoothTheme
-import com.espressodev.bluetooth.viewmodel.TicTacToeViewModel
-import com.espressodev.bluetooth.viewmodel.TicTacToeViewModelFactory
-import com.google.android.gms.nearby.Nearby
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-
-    private val viewModel: TicTacToeViewModel by viewModels {
-        TicTacToeViewModelFactory(Nearby.getConnectionsClient(applicationContext))
-    }
 
     private val requestMultiplePermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -72,6 +66,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun MainActivityScreen() {
+        val viewModel = hiltViewModel<TicTacToeViewModel>()
         Surface {
             when (TicTacToeRouter.currentScreen) {
                 is Screen.Home -> HomeScreen(viewModel)
@@ -84,12 +79,14 @@ class MainActivity : ComponentActivity() {
 
     private companion object {
         val REQUIRED_PERMISSIONS =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                arrayOf(Manifest.permission.NEARBY_WIFI_DEVICES)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 arrayOf(
                     Manifest.permission.BLUETOOTH_SCAN,
                     Manifest.permission.BLUETOOTH_ADVERTISE,
                     Manifest.permission.BLUETOOTH_CONNECT,
-                    Manifest.permission.ACCESS_FINE_LOCATION
+                    Manifest.permission.ACCESS_FINE_LOCATION,
                 )
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)

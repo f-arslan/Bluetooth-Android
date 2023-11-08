@@ -12,46 +12,46 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.espressodev.bluetooth.viewmodel.TicTacToeViewModel
+import com.espressodev.bluetooth.TicTacToeViewModel
 
 @Composable
 fun HomeScreen(viewModel: TicTacToeViewModel) {
-  HomeScreen(
-    onHostClick = { viewModel.startHosting() },
-    onDiscoverClick = { viewModel.startDiscovering() }
-  )
+    HomeScreen(
+        onHostClick = { viewModel.startHosting() },
+        onDiscoverClick = { viewModel.startDiscovering() }
+    )
 }
 
 @Composable
 fun HomeScreen(
-  onHostClick: () -> Unit,
-  onDiscoverClick: () -> Unit
+    onHostClick: () -> Unit,
+    onDiscoverClick: () -> Unit
 ) {
-  Column(
-    modifier = Modifier
-      .padding(16.dp)
-      .fillMaxSize(),
-    verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.CenterHorizontally
-  ) {
-    Button(
-      modifier = Modifier.fillMaxWidth(),
-      onClick = onHostClick
+    Column(
+        modifier = Modifier
+          .padding(16.dp)
+          .fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Text(text = "Host")
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onHostClick
+        ) {
+            Text(text = "Host")
+        }
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onDiscoverClick
+        ) {
+            Text(text = "Discover")
+        }
     }
-    Button(
-      modifier = Modifier.fillMaxWidth(),
-      onClick = onDiscoverClick
-    ) {
-      Text(text = "Discover")
-    }
-  }
 }
 
 @Preview
 @Composable
 fun HomeScreenPreview(
 ) {
-  HomeScreen(onHostClick = {}, onDiscoverClick = {})
+    HomeScreen(onHostClick = {}, onDiscoverClick = {})
 }
