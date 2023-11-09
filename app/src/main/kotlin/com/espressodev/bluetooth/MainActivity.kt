@@ -15,10 +15,10 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
-import com.espressodev.bluetooth.screens.DiscoveringScreen
-import com.espressodev.bluetooth.screens.GameScreen
-import com.espressodev.bluetooth.screens.HomeScreen
-import com.espressodev.bluetooth.screens.HostingScreen
+import com.espressodev.bluetooth.screens.waiting.DiscoveringScreen
+import com.espressodev.bluetooth.screens.game.GameScreen
+import com.espressodev.bluetooth.screens.home.HomeScreen
+import com.espressodev.bluetooth.screens.waiting.HostingScreen
 import com.espressodev.bluetooth.ui.theme.BluetoothTheme
 import dagger.hilt.android.AndroidEntryPoint
 

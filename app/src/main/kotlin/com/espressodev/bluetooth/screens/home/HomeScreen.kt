@@ -1,4 +1,4 @@
-package com.espressodev.bluetooth.screens
+package com.espressodev.bluetooth.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

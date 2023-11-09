@@ -1,4 +1,4 @@
-package com.espressodev.bluetooth.screens
+package com.espressodev.bluetooth.screens.game
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background

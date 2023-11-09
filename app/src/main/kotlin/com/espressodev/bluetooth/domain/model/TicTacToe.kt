@@ -1,6 +1,10 @@
 package com.espressodev.bluetooth.domain.model
 
-class TicTacToe(val players: Int = 2, val boardSize: Int = 3, val winningCount: Int = 3) {
+class TicTacToe(
+    private val players: Int = 2,
+    private val boardSize: Int = 3,
+    private val winningCount: Int = 3
+) {
     var playerTurn = 1
         private set
 
@@ -44,8 +48,8 @@ class TicTacToe(val players: Int = 2, val boardSize: Int = 3, val winningCount: 
                     // Check horizontal
                     if (j + winningCount <= boardSize) {
                         count = 1
-                        for (J in j + 1 until j + winningCount) {
-                            if (board[i][J] != player) break
+                        for (k in j + 1 until j + winningCount) {
+                            if (board[i][k] != player) break
                             count++
                             if (count == winningCount) return true
                         }
@@ -54,8 +58,8 @@ class TicTacToe(val players: Int = 2, val boardSize: Int = 3, val winningCount: 
                     // Check vertical
                     if (i + winningCount <= boardSize) {
                         count = 1
-                        for (I in i + 1 until i + winningCount) {
-                            if (board[I][j] != player) break
+                        for (k in i + 1 until i + winningCount) {
+                            if (board[k][j] != player) break
                             count++
                             if (count == winningCount) return true
                         }
@@ -64,8 +68,8 @@ class TicTacToe(val players: Int = 2, val boardSize: Int = 3, val winningCount: 
                     // Check diagonal 1
                     if (j + winningCount <= boardSize && i + winningCount <= boardSize) {
                         count = 1
-                        for ((I, J) in (i + 1 until i + winningCount).zip(j + 1 until j + winningCount)) {
-                            if (board[I][J] != player) break
+                        for ((I, k) in (i + 1 until i + winningCount).zip(j + 1 until j + winningCount)) {
+                            if (board[I][k] != player) break
                             count++
                             if (count == winningCount) return true
                         }
@@ -74,8 +78,8 @@ class TicTacToe(val players: Int = 2, val boardSize: Int = 3, val winningCount: 
                     // Check diagonal 2
                     if (j - winningCount + 1 >= 0 && i + winningCount <= boardSize) {
                         count = 1
-                        for ((I, J) in (i + 1 until i + winningCount).zip(j - 1 downTo 0)) {
-                            if (board[I][J] != player) break
+                        for ((I, k) in (i + 1 until i + winningCount).zip(j - 1 downTo 0)) {
+                            if (board[I][k] != player) break
                             count++
                             if (count == winningCount) return true
                         }
