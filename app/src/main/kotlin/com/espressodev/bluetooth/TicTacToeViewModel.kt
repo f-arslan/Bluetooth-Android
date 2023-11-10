@@ -9,6 +9,7 @@ import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.espressodev.bluetooth.playground.GameEvent
 import com.espressodev.bluetooth.playground.GameEventBusController
+import com.espressodev.bluetooth.playground.GameEventBusController.game
 import com.espressodev.bluetooth.playground.payloadCallback
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
@@ -19,15 +20,12 @@ import com.google.android.gms.nearby.connection.ConnectionsStatusCodes
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.google.android.gms.nearby.connection.DiscoveryOptions
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
-import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.Strategy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
-import kotlin.text.Charsets.UTF_8
-
 
 @HiltViewModel
 open class TicTacToeViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
@@ -36,8 +34,6 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
     private var localPlayer by Delegates.notNull<Int>()
     private var opponentPlayer by Delegates.notNull<Int>()
     lateinit var opponentEndpointId: String
-
-    private val game = GameEventBusController.game
 
     init {
         viewModelScope.launch {
@@ -180,11 +176,5 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
     private companion object {
         const val TAG = "TicTacToeVM"
         val STRATEGY = Strategy.P2P_POINT_TO_POINT
-        fun Pair<Int, Int>.toPayLoad() = Payload.fromBytes("$first,$second".toByteArray(UTF_8))
-        fun Payload.toPosition(): Pair<Int, Int> {
-            val positionStr = String(asBytes()!!, UTF_8)
-            val positionArray = positionStr.split(",")
-            return positionArray[0].toInt() to positionArray[1].toInt()
-        }
     }
 }

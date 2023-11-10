@@ -1,5 +1,6 @@
 package com.espressodev.bluetooth.playground
 
+import android.util.Log
 import com.espressodev.bluetooth.domain.model.GameState
 import com.espressodev.bluetooth.domain.model.TicTacToe
 import com.google.android.gms.nearby.connection.Payload
@@ -27,10 +28,7 @@ sealed class GameEvent {
     data class OnOpponentPlayerChanged(val opponentPlayer: Int) : GameEvent()
     data class OnLocalUsernameChanged(val localUsername: String) : GameEvent()
     data class OnOpponentEndPointChanged(val opponentEndPoint: String) : GameEvent()
-
     data class OnGameStateChanged(val gameState: GameState) : GameEvent()
-
-    data class OnGameChanged(val game: TicTacToe) : GameEvent()
     data object Reset : GameEvent()
 }
 
@@ -51,21 +49,16 @@ object GameEventBusController {
         }
 
         is GameEvent.OnGameStateChanged -> _gameState.update { event.gameState }
-        is GameEvent.OnGameChanged -> {
-            game.reset()
-        }
-
         GameEvent.Reset -> _gameUtility.update { GameUtility.Uninitialized }
     }
-
 }
 
-fun Pair<Int, Int>.toPayLoad() = Payload.fromBytes("$first,$second".toByteArray(Charsets.UTF_8))
 fun Payload.toPosition(): Pair<Int, Int> {
     val positionStr = String(asBytes()!!, Charsets.UTF_8)
     val positionArray = positionStr.split(",")
     return positionArray[0].toInt() to positionArray[1].toInt()
 }
+
 val GameEventBusController.payloadCallback: PayloadCallback
     get() = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
@@ -85,10 +78,11 @@ val GameEventBusController.payloadCallback: PayloadCallback
                 )
             }
         }
+
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
+            Log.d(
+                "GameEventBusController",
+                "onPayloadTransferUpdate: $endpointId, $update"
+            )
         }
     }
-
-class GamePublisher {
-
-}

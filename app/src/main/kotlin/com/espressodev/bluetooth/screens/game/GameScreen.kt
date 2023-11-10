@@ -24,6 +24,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.espressodev.bluetooth.playground.GameEventBusController
+import com.espressodev.bluetooth.playground.GameEventBusController.gameState
 
 @Composable
 fun GameRoute() {
@@ -32,7 +34,7 @@ fun GameRoute() {
 
 @Composable
 fun GameScreen(viewModel: GameViewModel = hiltViewModel()) {
-    val state by viewModel.gameState.collectAsStateWithLifecycle()
+    val state by gameState.collectAsStateWithLifecycle()
     BackHandler(onBack = {
         viewModel.goToHome()
     })

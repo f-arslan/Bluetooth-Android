@@ -8,10 +8,10 @@ import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.espressodev.bluetooth.playground.GameEvent
 import com.espressodev.bluetooth.playground.GameEventBusController
+import com.espressodev.bluetooth.playground.GameEventBusController.game
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.Payload
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,8 +21,6 @@ import kotlin.properties.Delegates
 @HiltViewModel
 class GameViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
     ViewModel() {
-    private val game = GameEventBusController.game
-    val gameState: StateFlow<GameState> = GameEventBusController.gameState
     private var localPlayer by Delegates.notNull<Int>()
     private lateinit var opponentEndpointId: String
 
@@ -31,8 +29,6 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
             GameEventBusController.gameUtility.collectLatest {
                 localPlayer = it.localPlayer
                 opponentEndpointId = it.opponentEndpointId
-                Log.d(TAG, "localPlayer: $localPlayer")
-                Log.d(TAG, "opponentEndpointId: $opponentEndpointId")
             }
         }
     }
