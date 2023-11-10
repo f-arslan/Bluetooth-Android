@@ -5,11 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.espressodev.bluetooth.BuildConfig.APPLICATION_ID
 import com.espressodev.bluetooth.domain.model.GameState
-import com.espressodev.bluetooth.domain.model.TicTacToe
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
-import com.espressodev.bluetooth.playground.GameEventBusController
 import com.espressodev.bluetooth.playground.GameEvent
+import com.espressodev.bluetooth.playground.GameEventBusController
+import com.espressodev.bluetooth.playground.payloadCallback
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
@@ -20,30 +20,24 @@ import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.google.android.gms.nearby.connection.DiscoveryOptions
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
 import com.google.android.gms.nearby.connection.Payload
-import com.google.android.gms.nearby.connection.PayloadCallback
-import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.properties.Delegates
 import kotlin.text.Charsets.UTF_8
-
 
 
 @HiltViewModel
 open class TicTacToeViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
     ViewModel() {
     lateinit var localUsername: String
-    var localPlayer by Delegates.notNull<Int>()
-    var opponentPlayer by Delegates.notNull<Int>()
+    private var localPlayer by Delegates.notNull<Int>()
+    private var opponentPlayer by Delegates.notNull<Int>()
     lateinit var opponentEndpointId: String
 
-    private var game = TicTacToe()
+    private val game = GameEventBusController.game
 
     init {
         viewModelScope.launch {
@@ -56,32 +50,12 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
         }
     }
 
-    private val _state = MutableStateFlow(GameState.Uninitialized)
-    val state = _state.asStateFlow()
-
-    private val payloadCallback: PayloadCallback = object : PayloadCallback() {
-        override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            Log.d(TAG, "onPayloadReceived")
-            if (payload.type == Payload.Type.BYTES) {
-                val position = payload.toPosition()
-                Log.d(TAG, "Received [${position.first},${position.second}] from $endpointId")
-                play(opponentPlayer, position)
-            }
-        }
-
-
-        override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
-            Log.d(TAG, "onPayloadTransferUpdate")
-        }
-    }
-
-
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
             Log.d(TAG, "onConnectionInitiated")
 
             Log.d(TAG, "Accepting connection...")
-            connectionsClient.acceptConnection(endpointId, payloadCallback)
+            connectionsClient.acceptConnection(endpointId, GameEventBusController.payloadCallback)
         }
 
         override fun onConnectionResult(endpointId: String, resolution: ConnectionResolution) {
@@ -127,12 +101,11 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
                 localUsername,
                 endpointId,
                 connectionLifecycleCallback
-            )
-                .addOnSuccessListener {
-                    Log.d(TAG, "Successfully requested a connection")
-                }.addOnFailureListener {
-                    Log.d(TAG, "Failed to request the connection")
-                }
+            ).addOnSuccessListener {
+                Log.d(TAG, "Successfully requested a connection")
+            }.addOnFailureListener {
+                Log.d(TAG, "Failed to request the connection")
+            }
         }
 
 
@@ -180,33 +153,10 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
 
     fun newGame() {
         Log.d(TAG, "Starting new game")
-        game = TicTacToe()
-        _state.value =
+        game.reset()
+        GameEventBusController.onEvent(GameEvent.OnGameStateChanged(
             GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
-    }
-
-    fun play(position: Pair<Int, Int>) {
-        if (game.playerTurn != localPlayer) return
-        if (game.isPlayedBucket(position)) return
-
-        play(localPlayer, position)
-        sendPosition(position)
-    }
-
-    private fun play(player: Int, position: Pair<Int, Int>) {
-        Log.d(TAG, "Player $player played [${position.first},${position.second}]")
-
-        game.play(player, position)
-        _state.value =
-            GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
-    }
-
-    private fun sendPosition(position: Pair<Int, Int>) {
-        Log.d(TAG, "Sending [${position.first},${position.second}] to $opponentEndpointId")
-        connectionsClient.sendPayload(
-            opponentEndpointId,
-            position.toPayLoad()
-        )
+        ))
     }
 
     override fun onCleared() {

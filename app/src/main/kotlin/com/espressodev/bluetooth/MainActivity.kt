@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
                 is Screen.Home -> HomeRoute(viewModel)
                 is Screen.Hosting -> HostingScreen(viewModel)
                 is Screen.Discovering -> DiscoveringScreen(viewModel)
-                is Screen.Game -> GameScreen(viewModel)
+                is Screen.Game -> GameScreen()
             }
         }
     }

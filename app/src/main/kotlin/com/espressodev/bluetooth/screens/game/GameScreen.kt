@@ -23,9 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.espressodev.bluetooth.TicTacToeViewModel
 
 @Composable
 fun GameRoute() {
@@ -33,8 +31,8 @@ fun GameRoute() {
 }
 
 @Composable
-fun GameScreen(viewModel: TicTacToeViewModel, gameViewModel: GameViewModel = hiltViewModel<GameViewModel>()) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+fun GameScreen(viewModel: GameViewModel = hiltViewModel()) {
+    val state by viewModel.gameState.collectAsStateWithLifecycle()
     BackHandler(onBack = {
         viewModel.goToHome()
     })
@@ -49,7 +47,7 @@ fun GameScreen(viewModel: TicTacToeViewModel, gameViewModel: GameViewModel = hil
             localPlayer = state.localPlayer,
             playerTurn = state.playerTurn,
             board = state.board,
-            onBucketClick = { position -> viewModel.play(position) }
+            onBucketClick = { position -> viewModel.playMoveAndSend(position) }
         )
     }
 }

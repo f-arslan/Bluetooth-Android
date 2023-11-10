@@ -4,17 +4,15 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.espressodev.bluetooth.domain.model.GameState
-import com.espressodev.bluetooth.domain.model.TicTacToe
+import com.espressodev.bluetooth.navigation.Screen
+import com.espressodev.bluetooth.navigation.TicTacToeRouter
+import com.espressodev.bluetooth.playground.GameEvent
 import com.espressodev.bluetooth.playground.GameEventBusController
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.Payload
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -23,21 +21,13 @@ import kotlin.properties.Delegates
 @HiltViewModel
 class GameViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
     ViewModel() {
-    private var game = TicTacToe()
-    lateinit var gameState: StateFlow<GameState>
-    var localPlayer by Delegates.notNull<Int>()
-    lateinit var opponentEndpointId: String
+    private val game = GameEventBusController.game
+    val gameState: StateFlow<GameState> = GameEventBusController.gameState
+    private var localPlayer by Delegates.notNull<Int>()
+    private lateinit var opponentEndpointId: String
 
     init {
         viewModelScope.launch {
-            with(GameEventBusController) {
-                this@GameViewModel.gameState = gameState
-                combine(gameUtility, game, gameState) { gameUtility, game, gameState ->
-                    localPlayer = gameUtility.localPlayer
-                    opponentEndpointId = gameUtility.opponentEndpointId
-                    this@GameViewModel.game = game
-                }
-            }
             GameEventBusController.gameUtility.collectLatest {
                 localPlayer = it.localPlayer
                 opponentEndpointId = it.opponentEndpointId
@@ -47,25 +37,44 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
         }
     }
 
-    fun newGame(localPlayer: Int) {
+    fun newGame() {
         Log.d(TAG, "newGame")
         game.reset()
-        _gameState.update {
-            GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
-        }
+        GameEventBusController.onEvent(
+            GameEvent.OnGameStateChanged(
+                GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
+            )
+        )
     }
 
     fun playMoveAndSend(position: Pair<Int, Int>) {
         if (game.playerTurn != localPlayer) return
         if (game.isPlayedBucket(position)) return
+
+        playMove(localPlayer, position)
+        sendPosition(position)
     }
 
     private fun playMove(player: Int, position: Pair<Int, Int>) {
         Log.d(TAG, "Player $player played [${position.first},${position.second}]")
 
         game.play(player, position)
-        _gameState.value =
+        GameEventBusController.onEvent(GameEvent.OnGameStateChanged(
             GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
+        ))
+    }
+
+    fun goToHome() {
+        stopClient()
+        TicTacToeRouter.navigateTo(Screen.Home)
+    }
+
+    private fun stopClient() {
+        Log.d(TAG, "Stop advertising, discovering, all endpoints")
+        connectionsClient.stopAdvertising()
+        connectionsClient.stopDiscovery()
+        connectionsClient.stopAllEndpoints()
+        GameEventBusController.onEvent(GameEvent.Reset)
     }
 
     private fun sendPosition(position: Pair<Int, Int>) {
