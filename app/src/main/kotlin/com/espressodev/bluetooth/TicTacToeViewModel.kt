@@ -2,12 +2,13 @@ package com.espressodev.bluetooth
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.espressodev.bluetooth.BuildConfig.APPLICATION_ID
 import com.espressodev.bluetooth.domain.model.GameState
 import com.espressodev.bluetooth.domain.model.TicTacToe
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
+import com.espressodev.bluetooth.playground.GameEventBusController
+import com.espressodev.bluetooth.playground.GameEvents
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
@@ -22,10 +23,8 @@ import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.text.Charsets.UTF_8
@@ -158,6 +157,9 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
             Log.d(TAG, "Discovering...")
             localPlayer = 2
             opponentPlayer = 1
+            // For GameEvent
+            GameEventBusController.onEvent(GameEvents.OnLocalPlayerChanged(2))
+            GameEventBusController.onEvent(GameEvents.OnOpponentPlayerChanged(1))
         }.addOnFailureListener {
             Log.d(TAG, "Unable to start discovering: $it")
             TicTacToeRouter.navigateTo(Screen.Home)

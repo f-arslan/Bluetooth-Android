@@ -38,6 +38,17 @@ class TicTacToe(
 
     fun isPlayedBucket(position: Pair<Int, Int>) = board[position.first][position.second] != 0
 
+    fun reset() {
+        playerTurn = 1
+        playerWon = 0
+        isOver = false
+        for (i in 0 until boardSize) {
+            for (j in 0 until boardSize) {
+                board[i][j] = 0
+            }
+        }
+    }
+
     private fun hasPlayerWon(player: Int): Boolean {
         if (player < 1 || player > players) return false
 
