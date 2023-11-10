@@ -77,8 +77,8 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel)
-    implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.play.services.nearby)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.kotlinx.coroutines.android)
 
 }

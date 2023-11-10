@@ -2,6 +2,7 @@ package com.espressodev.bluetooth
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.espressodev.bluetooth.BuildConfig.APPLICATION_ID
 import com.espressodev.bluetooth.domain.model.GameState
 import com.espressodev.bluetooth.domain.model.TicTacToe
@@ -21,18 +22,22 @@ import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.text.Charsets.UTF_8
 
+
+
 @HiltViewModel
-class TicTacToeViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
+open class TicTacToeViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
     ViewModel() {
     private val localUsername = UUID.randomUUID().toString()
-    private var localPlayer: Int = 0
-    private var opponentPlayer: Int = 0
+    protected var localPlayer: Int = 0
+    protected var opponentPlayer: Int = 0
     private var opponentEndpointId: String = ""
 
     private var game = TicTacToe()
@@ -108,11 +113,12 @@ class TicTacToeViewModel @Inject constructor(private val connectionsClient: Conn
                 localUsername,
                 endpointId,
                 connectionLifecycleCallback
-            ).addOnSuccessListener {
-                Log.d(TAG, "Successfully requested a connection")
-            }.addOnFailureListener {
-                Log.d(TAG, "Failed to request the connection")
-            }
+            )
+                .addOnSuccessListener {
+                    Log.d(TAG, "Successfully requested a connection")
+                }.addOnFailureListener {
+                    Log.d(TAG, "Failed to request the connection")
+                }
         }
 
 

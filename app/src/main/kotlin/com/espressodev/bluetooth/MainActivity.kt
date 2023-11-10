@@ -17,7 +17,7 @@ import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.espressodev.bluetooth.screens.waiting.DiscoveringScreen
 import com.espressodev.bluetooth.screens.game.GameScreen
-import com.espressodev.bluetooth.screens.home.HomeScreen
+import com.espressodev.bluetooth.screens.home.HomeRoute
 import com.espressodev.bluetooth.screens.waiting.HostingScreen
 import com.espressodev.bluetooth.ui.theme.BluetoothTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
         val viewModel = hiltViewModel<TicTacToeViewModel>()
         Surface {
             when (TicTacToeRouter.currentScreen) {
-                is Screen.Home -> HomeScreen(viewModel)
+                is Screen.Home -> HomeRoute(viewModel)
                 is Screen.Hosting -> HostingScreen(viewModel)
                 is Screen.Discovering -> DiscoveringScreen(viewModel)
                 is Screen.Game -> GameScreen(viewModel)

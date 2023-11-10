@@ -22,14 +22,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.espressodev.bluetooth.domain.model.GameState
 import com.espressodev.bluetooth.TicTacToeViewModel
 
 @Composable
-fun GameScreen(viewModel: TicTacToeViewModel) {
-    val state: GameState by viewModel.state.collectAsStateWithLifecycle()
+fun GameRoute() {
 
+}
+
+@Composable
+fun GameScreen(viewModel: TicTacToeViewModel, gameViewModel: GameViewModel = hiltViewModel<GameViewModel>()) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
     BackHandler(onBack = {
         viewModel.goToHome()
     })
@@ -56,8 +61,8 @@ fun GameOverScreen(
 ) {
     Column(
         modifier = Modifier
-          .fillMaxSize()
-          .padding(16.dp),
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -68,8 +73,8 @@ fun GameOverScreen(
         )
         Button(
             modifier = Modifier
-              .fillMaxWidth()
-              .padding(0.dp, 16.dp),
+                .fillMaxWidth()
+                .padding(0.dp, 16.dp),
             onClick = onNewGameClick
         ) {
             Text(text = "New game!")
@@ -93,9 +98,9 @@ fun OngoingGameScreen(
             Text(text = "You're player $localPlayer")
             Box(
                 modifier = Modifier
-                  .padding(4.dp, 0.dp)
-                  .size(10.dp)
-                  .background(color = getPlayerColor(localPlayer))
+                    .padding(4.dp, 0.dp)
+                    .size(10.dp)
+                    .background(color = getPlayerColor(localPlayer))
             )
         }
         Text(
@@ -122,8 +127,8 @@ fun Board(
                 for (j in board.indices) {
                     Bucket(
                         modifier = Modifier
-                          .fillMaxSize()
-                          .weight(1f),
+                            .fillMaxSize()
+                            .weight(1f),
                         player = board[i][j],
                         onClick = { onBucketClick(i to j) }
                     )
