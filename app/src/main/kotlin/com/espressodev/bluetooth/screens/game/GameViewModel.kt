@@ -10,24 +10,34 @@ import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.Payload
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.properties.Delegates
 
 
 @HiltViewModel
 class GameViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
     ViewModel() {
-    private val game = TicTacToe()
-    private val _state = MutableStateFlow(GameState.Uninitialized)
-    val state = _state.asStateFlow()
-    var localPlayer = 0
-    var opponentEndpointId = ""
+    private var game = TicTacToe()
+    lateinit var gameState: StateFlow<GameState>
+    var localPlayer by Delegates.notNull<Int>()
+    lateinit var opponentEndpointId: String
 
     init {
         viewModelScope.launch {
+            with(GameEventBusController) {
+                this@GameViewModel.gameState = gameState
+                combine(gameUtility, game, gameState) { gameUtility, game, gameState ->
+                    localPlayer = gameUtility.localPlayer
+                    opponentEndpointId = gameUtility.opponentEndpointId
+                    this@GameViewModel.game = game
+                }
+            }
             GameEventBusController.gameUtility.collectLatest {
                 localPlayer = it.localPlayer
                 opponentEndpointId = it.opponentEndpointId
@@ -40,7 +50,7 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
     fun newGame(localPlayer: Int) {
         Log.d(TAG, "newGame")
         game.reset()
-        _state.update {
+        _gameState.update {
             GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
         }
     }
@@ -54,7 +64,7 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
         Log.d(TAG, "Player $player played [${position.first},${position.second}]")
 
         game.play(player, position)
-        _state.value =
+        _gameState.value =
             GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
     }
 
@@ -69,6 +79,7 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
 
     companion object {
         const val TAG = "TicTacToeViewModel"
-        fun Pair<Int, Int>.toPayLoad() = Payload.fromBytes("$first,$second".toByteArray(Charsets.UTF_8))
+        fun Pair<Int, Int>.toPayLoad() =
+            Payload.fromBytes("$first,$second".toByteArray(Charsets.UTF_8))
     }
 }

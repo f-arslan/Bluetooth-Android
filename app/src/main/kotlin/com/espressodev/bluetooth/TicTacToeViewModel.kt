@@ -2,13 +2,14 @@ package com.espressodev.bluetooth
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.espressodev.bluetooth.BuildConfig.APPLICATION_ID
 import com.espressodev.bluetooth.domain.model.GameState
 import com.espressodev.bluetooth.domain.model.TicTacToe
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.espressodev.bluetooth.playground.GameEventBusController
-import com.espressodev.bluetooth.playground.GameEvents
+import com.espressodev.bluetooth.playground.GameEvent
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
@@ -25,8 +26,11 @@ import com.google.android.gms.nearby.connection.Strategy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.properties.Delegates
 import kotlin.text.Charsets.UTF_8
 
 
@@ -34,12 +38,23 @@ import kotlin.text.Charsets.UTF_8
 @HiltViewModel
 open class TicTacToeViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
     ViewModel() {
-    private val localUsername = UUID.randomUUID().toString()
-    protected var localPlayer: Int = 0
-    protected var opponentPlayer: Int = 0
-    private var opponentEndpointId: String = ""
+    lateinit var localUsername: String
+    var localPlayer by Delegates.notNull<Int>()
+    var opponentPlayer by Delegates.notNull<Int>()
+    lateinit var opponentEndpointId: String
 
     private var game = TicTacToe()
+
+    init {
+        viewModelScope.launch {
+            GameEventBusController.gameUtility.collectLatest { gameUtility ->
+                localPlayer = gameUtility.localPlayer
+                opponentPlayer = gameUtility.opponentPlayer
+                opponentEndpointId = gameUtility.opponentEndpointId
+                localUsername = gameUtility.localUsername
+            }
+        }
+    }
 
     private val _state = MutableStateFlow(GameState.Uninitialized)
     val state = _state.asStateFlow()
@@ -78,7 +93,7 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
 
                     connectionsClient.stopAdvertising()
                     connectionsClient.stopDiscovery()
-                    opponentEndpointId = endpointId
+                    GameEventBusController.onEvent(GameEvent.OnOpponentEndPointChanged(endpointId))
                     Log.d(TAG, "opponentEndpointId: $opponentEndpointId")
                     newGame()
                     TicTacToeRouter.navigateTo(Screen.Game)
@@ -137,8 +152,8 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
             advertisingOptions
         ).addOnSuccessListener {
             Log.d(TAG, "Advertising...")
-            localPlayer = 1
-            opponentPlayer = 2
+            GameEventBusController.onEvent(GameEvent.OnLocalPlayerChanged(1))
+            GameEventBusController.onEvent(GameEvent.OnOpponentPlayerChanged(2))
         }.addOnFailureListener {
             Log.d(TAG, "Unable to start advertising: $it")
             TicTacToeRouter.navigateTo(Screen.Home)
@@ -155,11 +170,8 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
             discoveryOptions
         ).addOnSuccessListener {
             Log.d(TAG, "Discovering...")
-            localPlayer = 2
-            opponentPlayer = 1
-            // For GameEvent
-            GameEventBusController.onEvent(GameEvents.OnLocalPlayerChanged(2))
-            GameEventBusController.onEvent(GameEvents.OnOpponentPlayerChanged(1))
+            GameEventBusController.onEvent(GameEvent.OnLocalPlayerChanged(2))
+            GameEventBusController.onEvent(GameEvent.OnOpponentPlayerChanged(1))
         }.addOnFailureListener {
             Log.d(TAG, "Unable to start discovering: $it")
             TicTacToeRouter.navigateTo(Screen.Home)
@@ -212,9 +224,7 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
         connectionsClient.stopAdvertising()
         connectionsClient.stopDiscovery()
         connectionsClient.stopAllEndpoints()
-        localPlayer = 0
-        opponentPlayer = 0
-        opponentEndpointId = ""
+        GameEventBusController.onEvent(GameEvent.Reset)
     }
 
     private companion object {

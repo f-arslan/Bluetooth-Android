@@ -3,6 +3,8 @@ package com.espressodev.bluetooth.playground
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.espressodev.bluetooth.BuildConfig
+import com.espressodev.bluetooth.domain.model.GameState
+import com.espressodev.bluetooth.domain.model.TicTacToe
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.google.android.gms.nearby.connection.AdvertisingOptions
@@ -205,35 +207,47 @@ class ConnectionPublisher @Inject constructor(private val connectionsClient: Con
 data class GameUtility(
     val localPlayer: Int,
     val opponentPlayer: Int,
-    val localUsername: String,
+    val localUsername: String = UUID.randomUUID().toString(),
     val opponentEndpointId: String
 ) {
     companion object {
-        val Uninitialized = GameUtility(0, 0, "", "")
+        val Uninitialized =
+            GameUtility(localPlayer = 0, opponentPlayer = 0, opponentEndpointId = "")
     }
 }
 
-sealed class GameEvents {
-    data class OnLocalPlayerChanged(val localPlayer: Int) : GameEvents()
-    data class OnOpponentPlayerChanged(val opponentPlayer: Int) : GameEvents()
-    data class OnLocalUsernameChanged(val localUsername: String) : GameEvents()
-    data class OnOpponentEndPointChanged(val opponentEndPoint: String) : GameEvents()
+sealed class GameEvent {
+    data class OnLocalPlayerChanged(val localPlayer: Int) : GameEvent()
+    data class OnOpponentPlayerChanged(val opponentPlayer: Int) : GameEvent()
+    data class OnLocalUsernameChanged(val localUsername: String) : GameEvent()
+    data class OnOpponentEndPointChanged(val opponentEndPoint: String) : GameEvent()
+
+    data class OnGameStateChanged(val gameState: GameState): GameEvent()
+
+    data class OnGameChanged(val game: TicTacToe): GameEvent()
+    data object Reset : GameEvent()
 }
 
 object GameEventBusController {
     private val _gameUtility = MutableStateFlow(GameUtility.Uninitialized)
     val gameUtility = _gameUtility.asStateFlow()
 
-    fun onEvent(event: GameEvents) = when (event) {
-        is GameEvents.OnLocalPlayerChanged -> _gameUtility.update {
-            Log.d("GameEventBusController", "localPlayer: ${event.localPlayer}")
-            it.copy(localPlayer = event.localPlayer)
-        }
-        is GameEvents.OnOpponentPlayerChanged -> _gameUtility.update { it.copy(opponentPlayer = event.opponentPlayer) }
-        is GameEvents.OnLocalUsernameChanged -> _gameUtility.update { it.copy(localUsername = event.localUsername) }
-        is GameEvents.OnOpponentEndPointChanged -> _gameUtility.update {
+    private val _game = MutableStateFlow(TicTacToe())
+    val game = _game.asStateFlow()
+
+    private val _gameState = MutableStateFlow(GameState.Uninitialized)
+    val gameState = _gameState.asStateFlow()
+
+    fun onEvent(event: GameEvent) = when (event) {
+        is GameEvent.OnLocalPlayerChanged -> _gameUtility.update { it.copy(localPlayer = event.localPlayer) }
+        is GameEvent.OnOpponentPlayerChanged -> _gameUtility.update { it.copy(opponentPlayer = event.opponentPlayer) }
+        is GameEvent.OnLocalUsernameChanged -> _gameUtility.update { it.copy(localUsername = event.localUsername) }
+        is GameEvent.OnOpponentEndPointChanged -> _gameUtility.update {
             it.copy(opponentEndpointId = event.opponentEndPoint)
         }
+        is GameEvent.OnGameStateChanged -> _gameState.update { event.gameState }
+        is GameEvent.OnGameChanged -> _game.update { event.game }
+        GameEvent.Reset -> _gameUtility.update { GameUtility.Uninitialized }
     }
 
 }
