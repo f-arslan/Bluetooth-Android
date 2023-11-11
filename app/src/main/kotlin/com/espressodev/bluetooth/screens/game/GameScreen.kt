@@ -28,11 +28,6 @@ import com.espressodev.bluetooth.playground.GameEventBusController
 import com.espressodev.bluetooth.playground.GameEventBusController.gameState
 
 @Composable
-fun GameRoute() {
-
-}
-
-@Composable
 fun GameScreen(viewModel: GameViewModel = hiltViewModel()) {
     val state by gameState.collectAsStateWithLifecycle()
     BackHandler(onBack = {

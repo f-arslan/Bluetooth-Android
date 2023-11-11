@@ -12,22 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.espressodev.bluetooth.TicTacToeViewModel
+import com.espressodev.bluetooth.HomeViewModel
+
 
 @Composable
-fun HomeRoute(viewModel: TicTacToeViewModel) {
-    HomeScreen(
-        onHostClick = { viewModel.startHosting() },
-        onDiscoverClick = { viewModel.startDiscovering() }
-    )
-}
-
-@Composable
-fun HomeScreen(
-    onHostClick: () -> Unit,
-    onDiscoverClick: () -> Unit
-) {
+fun HomeScreen(onHostClick: () -> Unit, onDiscoverClick: () -> Unit) {
     Column(
         modifier = Modifier
             .padding(16.dp)

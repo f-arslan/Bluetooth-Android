@@ -15,53 +15,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.espressodev.bluetooth.TicTacToeViewModel
 
 @Composable
-fun HostingScreen(
-    viewModel: TicTacToeViewModel
-) {
-    BackHandler(onBack = {
-        viewModel.goToHome()
-    })
-
-    WaitingScreen(
-        title = "Hosting...",
-        onStopClick = { viewModel.goToHome() }
-    )
+fun HostingScreen(navigateToHome: () -> Unit) {
+    BackHandler(onBack = navigateToHome)
+    WaitingScreen(title = "Hosting...", onStopClick = navigateToHome)
 }
 
 @Composable
 fun DiscoveringScreen(
-    viewModel: TicTacToeViewModel
+    navigateToHome: () -> Unit
 ) {
-    BackHandler(onBack = {
-        viewModel.goToHome()
-    })
-
-    WaitingScreen(
-        title = "Discovering...",
-        onStopClick = { viewModel.goToHome() }
-    )
+    BackHandler(onBack = navigateToHome)
+    WaitingScreen(title = "Discovering...", onStopClick = navigateToHome)
 }
 
 @Composable
-fun WaitingScreen(
-    title: String,
-    onStopClick: () -> Unit
-) {
+fun WaitingScreen(title: String, onStopClick: () -> Unit) {
     Column(
         modifier = Modifier
-          .fillMaxSize()
-          .padding(16.dp),
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = title)
         CircularProgressIndicator(
             modifier = Modifier
-              .padding(16.dp)
-              .size(80.dp)
+                .padding(16.dp)
+                .size(80.dp)
         )
         Button(
             modifier = Modifier.fillMaxWidth(),
