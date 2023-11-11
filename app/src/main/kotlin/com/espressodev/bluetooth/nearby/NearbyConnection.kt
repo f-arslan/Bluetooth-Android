@@ -1,14 +1,14 @@
 package com.espressodev.bluetooth.nearby
 
 import android.util.Log
+import com.espressodev.bluetooth.common.ext.toPosition
 import com.espressodev.bluetooth.domain.model.GameState
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
-import com.espressodev.bluetooth.playground.GameEvent
-import com.espressodev.bluetooth.playground.GameEventBusController.game
-import com.espressodev.bluetooth.playground.GameEventBusController.gameUtility
-import com.espressodev.bluetooth.playground.GameEventBusController.onEvent
-import com.espressodev.bluetooth.playground.toPosition
+import com.espressodev.bluetooth.event_bus.GameEvent
+import com.espressodev.bluetooth.event_bus.GameEventBusController.game
+import com.espressodev.bluetooth.event_bus.GameEventBusController.gameUtility
+import com.espressodev.bluetooth.event_bus.GameEventBusController.onEvent
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
 import com.google.android.gms.nearby.connection.ConnectionResolution

@@ -23,9 +23,7 @@ fun HostingScreen(navigateToHome: () -> Unit) {
 }
 
 @Composable
-fun DiscoveringScreen(
-    navigateToHome: () -> Unit
-) {
+fun DiscoveringScreen(navigateToHome: () -> Unit) {
     BackHandler(onBack = navigateToHome)
     WaitingScreen(title = "Discovering...", onStopClick = navigateToHome)
 }

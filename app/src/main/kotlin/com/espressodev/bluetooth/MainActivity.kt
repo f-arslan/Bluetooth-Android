@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun MainActivityScreen() {
-        val viewModel = hiltViewModel<HomeViewModel>()
+        val viewModel = hiltViewModel<TicTacToeViewModel>()
         Surface {
             when (TicTacToeRouter.currentScreen) {
                 is Screen.Home -> HomeScreen(

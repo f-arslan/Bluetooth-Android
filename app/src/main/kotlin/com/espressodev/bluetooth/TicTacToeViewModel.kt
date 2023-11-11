@@ -7,9 +7,9 @@ import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.espressodev.bluetooth.nearby.ConnectionLifecycleEvent
 import com.espressodev.bluetooth.nearby.ConnectionLifecycleEventImpl
-import com.espressodev.bluetooth.playground.GameEvent
-import com.espressodev.bluetooth.playground.GameEventBusController.gameUtility
-import com.espressodev.bluetooth.playground.GameEventBusController.onEvent
+import com.espressodev.bluetooth.event_bus.GameEvent
+import com.espressodev.bluetooth.event_bus.GameEventBusController.gameUtility
+import com.espressodev.bluetooth.event_bus.GameEventBusController.onEvent
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.DiscoveryOptions
@@ -18,7 +18,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
+class TicTacToeViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
     ViewModel(), ConnectionLifecycleEvent by ConnectionLifecycleEventImpl(connectionsClient) {
     // It's not changing entire app we can directly use it
     private val localUsername = gameUtility.value.localUsername
