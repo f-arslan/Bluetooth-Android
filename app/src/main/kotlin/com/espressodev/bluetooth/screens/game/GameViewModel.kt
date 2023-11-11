@@ -9,6 +9,7 @@ import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.espressodev.bluetooth.playground.GameEvent
 import com.espressodev.bluetooth.playground.GameEventBusController
 import com.espressodev.bluetooth.playground.GameEventBusController.game
+import com.espressodev.bluetooth.playground.GameEventBusController.gameUtility
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.Payload
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +27,7 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
 
     init {
         viewModelScope.launch {
-            GameEventBusController.gameUtility.collectLatest {
+            gameUtility.collectLatest {
                 localPlayer = it.localPlayer
                 opponentEndpointId = it.opponentEndpointId
             }
@@ -34,13 +35,13 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
     }
 
     fun newGame() {
-        Log.d(TAG, "newGame")
         game.reset()
         GameEventBusController.onEvent(
             GameEvent.OnGameStateChanged(
                 GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
             )
         )
+        Log.d(TAG, "newGame")
     }
 
     fun playMoveAndSend(position: Pair<Int, Int>) {
@@ -52,12 +53,11 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
     }
 
     private fun playMove(player: Int, position: Pair<Int, Int>) {
-        Log.d(TAG, "Player $player played [${position.first},${position.second}]")
-
         game.play(player, position)
         GameEventBusController.onEvent(GameEvent.OnGameStateChanged(
             GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
         ))
+        Log.d(TAG, "Player $player played [${position.first},${position.second}]")
     }
 
     fun goToHome() {
@@ -66,21 +66,20 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
     }
 
     private fun stopClient() {
-        Log.d(TAG, "Stop advertising, discovering, all endpoints")
         connectionsClient.stopAdvertising()
         connectionsClient.stopDiscovery()
         connectionsClient.stopAllEndpoints()
         GameEventBusController.onEvent(GameEvent.Reset)
+        Log.d(TAG, "Stop advertising, discovering, all endpoints")
     }
 
     private fun sendPosition(position: Pair<Int, Int>) {
-        Log.d(TAG, "Sending [${position.first},${position.second}] to $opponentEndpointId")
         connectionsClient.sendPayload(
             opponentEndpointId,
             position.toPayLoad()
         )
+        Log.d(TAG, "Sending [${position.first},${position.second}] to $opponentEndpointId")
     }
-
 
     companion object {
         const val TAG = "TicTacToeViewModel"

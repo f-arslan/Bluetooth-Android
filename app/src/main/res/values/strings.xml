@@ -3,4 +3,5 @@
 
     <string name="title_activity_companion_device_pairing">CompanionDevicePairing</string>
     <string name="generic_error">Generic error</string>
+    <string name="title_activity_delegate">DelegateActivity</string>
 </resources>

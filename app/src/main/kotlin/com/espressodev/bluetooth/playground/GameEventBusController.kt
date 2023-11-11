@@ -35,6 +35,7 @@ sealed class GameEvent {
 object GameEventBusController {
     private val _gameUtility = MutableStateFlow(GameUtility.Uninitialized)
     val gameUtility = _gameUtility.asStateFlow()
+
     val game = TicTacToe()
 
     private val _gameState = MutableStateFlow(GameState.Uninitialized)
@@ -59,30 +60,3 @@ fun Payload.toPosition(): Pair<Int, Int> {
     return positionArray[0].toInt() to positionArray[1].toInt()
 }
 
-val GameEventBusController.payloadCallback: PayloadCallback
-    get() = object : PayloadCallback() {
-        override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            if (payload.type == Payload.Type.BYTES) {
-                val position = payload.toPosition()
-                game.play(gameUtility.value.opponentPlayer, position)
-                onEvent(
-                    GameEvent.OnGameStateChanged(
-                        GameState(
-                            gameUtility.value.localPlayer,
-                            game.playerTurn,
-                            game.playerWon,
-                            game.isOver,
-                            game.board
-                        )
-                    )
-                )
-            }
-        }
-
-        override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
-            Log.d(
-                "GameEventBusController",
-                "onPayloadTransferUpdate: $endpointId, $update"
-            )
-        }
-    }

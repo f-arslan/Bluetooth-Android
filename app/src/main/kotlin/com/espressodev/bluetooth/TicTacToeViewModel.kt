@@ -7,10 +7,12 @@ import com.espressodev.bluetooth.BuildConfig.APPLICATION_ID
 import com.espressodev.bluetooth.domain.model.GameState
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
+import com.espressodev.bluetooth.nearby_callbacks.payloadCallback
 import com.espressodev.bluetooth.playground.GameEvent
 import com.espressodev.bluetooth.playground.GameEventBusController
 import com.espressodev.bluetooth.playground.GameEventBusController.game
-import com.espressodev.bluetooth.playground.payloadCallback
+import com.espressodev.bluetooth.playground.GameEventBusController.gameUtility
+import com.espressodev.bluetooth.playground.GameEventBusController.onEvent
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
@@ -32,14 +34,16 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
     ViewModel() {
     lateinit var localUsername: String
     private var localPlayer by Delegates.notNull<Int>()
-    private var opponentPlayer by Delegates.notNull<Int>()
     lateinit var opponentEndpointId: String
 
     init {
+        observeGameUtility()
+    }
+
+    private fun observeGameUtility() {
         viewModelScope.launch {
-            GameEventBusController.gameUtility.collectLatest { gameUtility ->
+            gameUtility.collectLatest { gameUtility ->
                 localPlayer = gameUtility.localPlayer
-                opponentPlayer = gameUtility.opponentPlayer
                 opponentEndpointId = gameUtility.opponentEndpointId
                 localUsername = gameUtility.localUsername
             }
@@ -49,24 +53,19 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
             Log.d(TAG, "onConnectionInitiated")
-
-            Log.d(TAG, "Accepting connection...")
             connectionsClient.acceptConnection(endpointId, GameEventBusController.payloadCallback)
+            Log.d(TAG, "Accepting connection...")
         }
 
         override fun onConnectionResult(endpointId: String, resolution: ConnectionResolution) {
             Log.d(TAG, "onConnectionResult")
-
             when (resolution.status.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
-                    Log.d(TAG, "ConnectionsStatusCodes.STATUS_OK")
-
                     connectionsClient.stopAdvertising()
                     connectionsClient.stopDiscovery()
-                    GameEventBusController.onEvent(GameEvent.OnOpponentEndPointChanged(endpointId))
+                    onEvent(GameEvent.OnOpponentEndPointChanged(endpointId))
                     Log.d(TAG, "opponentEndpointId: $opponentEndpointId")
-                    newGame()
-                    TicTacToeRouter.navigateTo(Screen.Game)
+                    navigateToGame()
                 }
 
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
@@ -87,6 +86,12 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
             Log.d(TAG, "onDisconnected")
             goToHome()
         }
+    }
+
+    private fun navigateToGame() {
+        game.reset()
+        updateGameState()
+        TicTacToeRouter.navigateTo(Screen.Game)
     }
 
     private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
@@ -120,12 +125,12 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
             connectionLifecycleCallback,
             advertisingOptions
         ).addOnSuccessListener {
+            onEvent(GameEvent.OnLocalPlayerChanged(1))
+            onEvent(GameEvent.OnOpponentPlayerChanged(2))
             Log.d(TAG, "Advertising...")
-            GameEventBusController.onEvent(GameEvent.OnLocalPlayerChanged(1))
-            GameEventBusController.onEvent(GameEvent.OnOpponentPlayerChanged(2))
         }.addOnFailureListener {
-            Log.d(TAG, "Unable to start advertising: $it")
             TicTacToeRouter.navigateTo(Screen.Home)
+            Log.d(TAG, "Unable to start advertising: $it")
         }
     }
 
@@ -139,20 +144,20 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
             discoveryOptions
         ).addOnSuccessListener {
             Log.d(TAG, "Discovering...")
-            GameEventBusController.onEvent(GameEvent.OnLocalPlayerChanged(2))
-            GameEventBusController.onEvent(GameEvent.OnOpponentPlayerChanged(1))
+            onEvent(GameEvent.OnLocalPlayerChanged(2))
+            onEvent(GameEvent.OnOpponentPlayerChanged(1))
         }.addOnFailureListener {
             Log.d(TAG, "Unable to start discovering: $it")
             TicTacToeRouter.navigateTo(Screen.Home)
         }
     }
 
-    fun newGame() {
-        Log.d(TAG, "Starting new game")
-        game.reset()
-        GameEventBusController.onEvent(GameEvent.OnGameStateChanged(
-            GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
-        ))
+    private fun updateGameState() {
+        onEvent(
+            GameEvent.OnGameStateChanged(
+                GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
+            )
+        )
     }
 
     override fun onCleared() {
@@ -170,7 +175,7 @@ open class TicTacToeViewModel @Inject constructor(private val connectionsClient:
         connectionsClient.stopAdvertising()
         connectionsClient.stopDiscovery()
         connectionsClient.stopAllEndpoints()
-        GameEventBusController.onEvent(GameEvent.Reset)
+        onEvent(GameEvent.Reset)
     }
 
     private companion object {
