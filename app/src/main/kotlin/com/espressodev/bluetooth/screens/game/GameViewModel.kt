@@ -5,13 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.espressodev.bluetooth.common.ext.toPayLoad
 import com.espressodev.bluetooth.domain.model.GameState
+import com.espressodev.bluetooth.domain.model.TicTacToe
 import com.espressodev.bluetooth.event_bus.GameEvent
-import com.espressodev.bluetooth.event_bus.GameEventBusController.game
-import com.espressodev.bluetooth.event_bus.GameEventBusController.gameUtility
-import com.espressodev.bluetooth.event_bus.GameEventBusController.onEvent
+import com.espressodev.bluetooth.event_bus.GameEventBus.gameUtility
+import com.espressodev.bluetooth.event_bus.GameEventBus.onEvent
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.espressodev.bluetooth.nearby.NearbyConnectionEvent
+import com.espressodev.bluetooth.nearby.NearbyConnectionEventBus.nearbyLifecycleEvent
 import com.espressodev.bluetooth.nearby.NearbyLifecycle
 import com.espressodev.bluetooth.nearby.NearbyLifecycleImpl
 import com.google.android.gms.nearby.connection.ConnectionsClient
@@ -23,15 +24,17 @@ import kotlin.properties.Delegates
 
 
 @HiltViewModel
-class GameViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
-    ViewModel(), NearbyLifecycle by NearbyLifecycleImpl(connectionsClient) {
+class GameViewModel @Inject constructor(
+    private val connectionsClient: ConnectionsClient,
+    private val game: TicTacToe
+) :
+    ViewModel(), NearbyLifecycle by NearbyLifecycleImpl(connectionsClient, game) {
     private var localPlayer by Delegates.notNull<Int>()
     private lateinit var opponentEndpointId: String
 
     init {
         observeGameUtility()
         observeNearbyLifecycleEvent()
-        Log.d(TAG, "Nearby code: ${this.nearbyLifecycleEvent.hashCode()}")
     }
 
     private fun observeNearbyLifecycleEvent() = viewModelScope.launch {

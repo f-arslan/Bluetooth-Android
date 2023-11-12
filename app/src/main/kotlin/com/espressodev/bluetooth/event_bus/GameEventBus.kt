@@ -1,17 +1,14 @@
 package com.espressodev.bluetooth.event_bus
 
 import com.espressodev.bluetooth.domain.model.GameState
-import com.espressodev.bluetooth.domain.model.TicTacToe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 
-object GameEventBusController {
+object GameEventBus {
     private val _gameUtility = MutableStateFlow(GameUtilityState.Uninitialized)
     val gameUtility = _gameUtility.asStateFlow()
-
-    val game = TicTacToe()
 
     private val _gameState = MutableStateFlow(GameState.Uninitialized)
     val gameState = _gameState.asStateFlow()

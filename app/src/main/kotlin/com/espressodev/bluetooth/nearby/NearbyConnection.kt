@@ -2,13 +2,12 @@ package com.espressodev.bluetooth.nearby
 
 import android.util.Log
 import com.espressodev.bluetooth.BuildConfig
-import com.espressodev.bluetooth.TicTacToeViewModel
 import com.espressodev.bluetooth.common.ext.toPosition
 import com.espressodev.bluetooth.domain.model.GameState
+import com.espressodev.bluetooth.domain.model.TicTacToe
 import com.espressodev.bluetooth.event_bus.GameEvent
-import com.espressodev.bluetooth.event_bus.GameEventBusController.game
-import com.espressodev.bluetooth.event_bus.GameEventBusController.gameUtility
-import com.espressodev.bluetooth.event_bus.GameEventBusController.onEvent
+import com.espressodev.bluetooth.event_bus.GameEventBus.gameUtility
+import com.espressodev.bluetooth.event_bus.GameEventBus.onEvent
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.google.android.gms.nearby.connection.AdvertisingOptions
@@ -26,44 +25,30 @@ import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Singleton
 import kotlin.properties.Delegates
 
 interface NearbyLifecycle {
     fun stopClient()
     fun startHost()
     fun startDiscovery()
-    val nearbyLifecycleEvent: StateFlow<NearbyConnectionEvent>
 }
 
-sealed interface NearbyConnectionEvent {
-    data object Idle : NearbyConnectionEvent
-    data object NavigateToHome : NearbyConnectionEvent
-    data object NavigateToGame : NearbyConnectionEvent
 
-}
 
 class NearbyLifecycleImpl(
     private val connectionsClient: ConnectionsClient,
+    private val game: TicTacToe,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 ) : NearbyLifecycle {
     private lateinit var opponentEndpointId: String
     private var localPlayer by Delegates.notNull<Int>()
     lateinit var localUsername: String
 
-    private val _nearbyLifecycleEvent =
-        MutableStateFlow<NearbyConnectionEvent>(NearbyConnectionEvent.Idle)
-    override val nearbyLifecycleEvent = _nearbyLifecycleEvent.asStateFlow()
 
     init {
         observeGameUtility()
-        Log.d (TAG, "Nearby code: ${this.nearbyLifecycleEvent.hashCode()}")
     }
 
     private fun observeGameUtility() {
@@ -151,8 +136,7 @@ class NearbyLifecycleImpl(
 
         override fun onDisconnected(endpointId: String) {
             Log.d(TAG, "onDisconnected")
-            _nearbyLifecycleEvent.update { NearbyConnectionEvent.NavigateToHome }
-            Log.d(TAG, _nearbyLifecycleEvent.value.toString())
+            NearbyConnectionEventBus.onEvent(NearbyConnectionEvent.NavigateToHome)
         }
     }
 
@@ -162,7 +146,7 @@ class NearbyLifecycleImpl(
         game.reset()
         onEvent(GameEvent.OnOpponentEndPointChanged(endpointId))
         updateGameState()
-        _nearbyLifecycleEvent.update { NearbyConnectionEvent.NavigateToGame }
+        NearbyConnectionEventBus.onEvent(NearbyConnectionEvent.NavigateToGame)
     }
 
     private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
