@@ -73,8 +73,8 @@ class MainActivity : ComponentActivity() {
                     onDiscoverClick = viewModel::startDiscovering,
                     onHostClick = viewModel::startHosting
                 )
-                is Screen.Hosting -> HostingScreen(viewModel::navigateToHome)
-                is Screen.Discovering -> DiscoveringScreen(viewModel::navigateToHome)
+                is Screen.Hosting -> HostingScreen(viewModel::navigateToGame)
+                is Screen.Discovering -> DiscoveringScreen(viewModel::navigateToGame)
                 is Screen.Game -> GameScreen()
             }
         }

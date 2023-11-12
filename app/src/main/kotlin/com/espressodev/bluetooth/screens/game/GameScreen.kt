@@ -29,21 +29,19 @@ import com.espressodev.bluetooth.event_bus.GameEventBusController.gameState
 @Composable
 fun GameScreen(viewModel: GameViewModel = hiltViewModel()) {
     val state by gameState.collectAsStateWithLifecycle()
-    BackHandler(onBack = {
-        viewModel.goToHome()
-    })
+    BackHandler(onBack = viewModel::goToHome)
 
     if (state.isOver) {
         GameOverScreen(
             playerWon = state.playerWon,
-            onNewGameClick = { viewModel.newGame() }
+            onNewGameClick = viewModel::newGame
         )
     } else {
         OngoingGameScreen(
             localPlayer = state.localPlayer,
             playerTurn = state.playerTurn,
             board = state.board,
-            onBucketClick = { position -> viewModel.playMoveAndSend(position) }
+            onBucketClick = viewModel::playMoveAndSend
         )
     }
 }

@@ -11,6 +11,9 @@ import com.espressodev.bluetooth.event_bus.GameEventBusController.gameUtility
 import com.espressodev.bluetooth.event_bus.GameEventBusController.onEvent
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
+import com.espressodev.bluetooth.nearby.NearbyConnectionEvent
+import com.espressodev.bluetooth.nearby.NearbyLifecycle
+import com.espressodev.bluetooth.nearby.NearbyLifecycleImpl
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -21,18 +24,29 @@ import kotlin.properties.Delegates
 
 @HiltViewModel
 class GameViewModel @Inject constructor(private val connectionsClient: ConnectionsClient) :
-    ViewModel() {
+    ViewModel(), NearbyLifecycle by NearbyLifecycleImpl(connectionsClient) {
     private var localPlayer by Delegates.notNull<Int>()
     private lateinit var opponentEndpointId: String
 
-    init { observeGameUtility() }
+    init {
+        observeGameUtility()
+        observeNearbyLifecycleEvent()
+        Log.d(TAG, "Nearby code: ${this.nearbyLifecycleEvent.hashCode()}")
+    }
 
-    private fun observeGameUtility() {
-        viewModelScope.launch {
-            gameUtility.collectLatest {
-                localPlayer = it.localPlayer
-                opponentEndpointId = it.opponentEndpointId
+    private fun observeNearbyLifecycleEvent() = viewModelScope.launch {
+        nearbyLifecycleEvent.collectLatest {
+            if (it is NearbyConnectionEvent.NavigateToHome) {
+                Log.d(TAG, it.toString())
+                goToHome()
             }
+        }
+    }
+
+    private fun observeGameUtility() = viewModelScope.launch {
+        gameUtility.collectLatest {
+            localPlayer = it.localPlayer
+            opponentEndpointId = it.opponentEndpointId
         }
     }
 
@@ -57,21 +71,14 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
         game.play(player, position)
         onEvent(
             GameEvent.OnGameStateChanged(
-            GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
-        ))
+                GameState(localPlayer, game.playerTurn, game.playerWon, game.isOver, game.board)
+            )
+        )
     }
 
     fun goToHome() {
         stopClient()
         TicTacToeRouter.navigateTo(Screen.Home)
-    }
-
-    private fun stopClient() {
-        connectionsClient.stopAdvertising()
-        connectionsClient.stopDiscovery()
-        connectionsClient.stopAllEndpoints()
-        onEvent(GameEvent.Reset)
-        Log.d(TAG, "Stop advertising, discovering, all endpoints")
     }
 
     private fun sendPosition(position: Pair<Int, Int>) {
@@ -83,6 +90,6 @@ class GameViewModel @Inject constructor(private val connectionsClient: Connectio
     }
 
     companion object {
-        const val TAG = "TicTacToeViewModel"
+        const val TAG = "GameViewModel"
     }
 }
