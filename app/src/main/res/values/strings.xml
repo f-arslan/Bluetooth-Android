@@ -4,4 +4,9 @@
     <string name="title_activity_companion_device_pairing">CompanionDevicePairing</string>
     <string name="generic_error">Generic error</string>
     <string name="title_activity_delegate">DelegateActivity</string>
+    <string name="confirm">Confirm</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="auth_dialog_title">You found a match</string>
+    <string name="auth_dialog_text">%s start hosting, do you want to connect?</string>
+    <string name="cancel">Cancel</string>
 </resources>

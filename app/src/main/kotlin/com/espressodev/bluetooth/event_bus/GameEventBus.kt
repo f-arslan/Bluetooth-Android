@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.update
 
 
 object GameEventBus {
-    private val _gameUtility = MutableStateFlow(GameUtilityState.Uninitialized)
+    private val _gameUtility = MutableStateFlow(GameUtility())
     val gameUtility = _gameUtility.asStateFlow()
 
     private val _gameState = MutableStateFlow(GameState.Uninitialized)
@@ -21,7 +21,8 @@ object GameEventBus {
             it.copy(opponentEndpointId = event.opponentEndPoint)
         }
 
+        is GameEvent.OnAuthDialogStateChanged -> _gameUtility.update { it.copy(authDialogState = event.state) }
         is GameEvent.OnGameStateChanged -> _gameState.update { event.gameState }
-        GameEvent.Reset -> _gameUtility.update { GameUtilityState.Uninitialized }
+        GameEvent.Reset -> _gameUtility.update { GameUtility() }
     }
 }

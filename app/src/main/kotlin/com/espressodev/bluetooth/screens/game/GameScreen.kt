@@ -1,5 +1,6 @@
 package com.espressodev.bluetooth.screens.game
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,7 @@ import com.espressodev.bluetooth.event_bus.GameEventBus.gameState
 @Composable
 fun GameScreen(viewModel: GameViewModel = hiltViewModel()) {
     val state by gameState.collectAsStateWithLifecycle()
+    Log.d("GameScreen", state.toString())
     BackHandler(onBack = viewModel::goToHome)
 
     if (state.isOver) {

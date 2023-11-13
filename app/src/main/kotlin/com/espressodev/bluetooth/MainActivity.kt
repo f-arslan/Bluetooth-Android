@@ -12,13 +12,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.espressodev.bluetooth.navigation.Screen
 import com.espressodev.bluetooth.navigation.TicTacToeRouter
 import com.espressodev.bluetooth.screens.game.GameScreen
-import com.espressodev.bluetooth.screens.home.HomeScreen
-import com.espressodev.bluetooth.screens.waiting.DiscoveringScreen
-import com.espressodev.bluetooth.screens.waiting.HostingScreen
+import com.espressodev.bluetooth.screens.home.HomeRoute
 import com.espressodev.bluetooth.ui.theme.BluetoothTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -66,15 +63,9 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun MainActivityScreen() {
-        val viewModel = hiltViewModel<TicTacToeViewModel>()
         Surface {
             when (TicTacToeRouter.currentScreen) {
-                is Screen.Home -> HomeScreen(
-                    onDiscoverClick = viewModel::startDiscovering,
-                    onHostClick = viewModel::startHosting
-                )
-                is Screen.Hosting -> HostingScreen(viewModel::navigateToGame)
-                is Screen.Discovering -> DiscoveringScreen(viewModel::navigateToGame)
+                is Screen.Home -> HomeRoute()
                 is Screen.Game -> GameScreen()
             }
         }

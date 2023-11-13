@@ -27,10 +27,9 @@ import kotlin.properties.Delegates
 class GameViewModel @Inject constructor(
     private val connectionsClient: ConnectionsClient,
     private val game: TicTacToe
-) :
-    ViewModel(), NearbyLifecycle by NearbyLifecycleImpl(connectionsClient, game) {
+) : ViewModel(), NearbyLifecycle by NearbyLifecycleImpl(connectionsClient, game) {
     private var localPlayer by Delegates.notNull<Int>()
-    private lateinit var opponentEndpointId: String
+    override lateinit var opponentEndpointId: String
 
     init {
         observeGameUtility()
@@ -51,6 +50,7 @@ class GameViewModel @Inject constructor(
             localPlayer = it.localPlayer
             opponentEndpointId = it.opponentEndpointId
         }
+        Log.d(TAG, gameUtility.toString())
     }
 
     fun newGame() {

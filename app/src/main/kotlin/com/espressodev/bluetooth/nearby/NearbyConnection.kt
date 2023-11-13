@@ -5,6 +5,7 @@ import com.espressodev.bluetooth.BuildConfig
 import com.espressodev.bluetooth.common.ext.toPosition
 import com.espressodev.bluetooth.domain.model.GameState
 import com.espressodev.bluetooth.domain.model.TicTacToe
+import com.espressodev.bluetooth.event_bus.DialogState
 import com.espressodev.bluetooth.event_bus.GameEvent
 import com.espressodev.bluetooth.event_bus.GameEventBus.gameUtility
 import com.espressodev.bluetooth.event_bus.GameEventBus.onEvent
@@ -30,23 +31,22 @@ import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
 
 interface NearbyLifecycle {
+    val opponentEndpointId: String
     fun stopClient()
     fun startHost()
     fun startDiscovery()
 }
 
 
-
 class NearbyLifecycleImpl(
     private val connectionsClient: ConnectionsClient,
     private val game: TicTacToe,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate)
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 ) : NearbyLifecycle {
-    private lateinit var opponentEndpointId: String
+    override lateinit var opponentEndpointId: String
     private var localPlayer by Delegates.notNull<Int>()
-    lateinit var localUsername: String
-
-
+    private lateinit var localUsername: String
+    private lateinit var dialogState: DialogState
     init {
         observeGameUtility()
     }
@@ -57,6 +57,7 @@ class NearbyLifecycleImpl(
                 opponentEndpointId = it.opponentEndpointId
                 localPlayer = it.localPlayer
                 localUsername = it.localUsername
+                dialogState = it.authDialogState
             }
         }
     }
@@ -111,7 +112,9 @@ class NearbyLifecycleImpl(
 
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
-            connectionsClient.acceptConnection(endpointId, payloadCallback)
+            Log.d(TAG, "OnConnectionInitiated")
+            onEvent(GameEvent.OnAuthDialogStateChanged(DialogState.Open))
+            // connectionsClient.acceptConnection(endpointId, payloadCallback)
         }
 
         override fun onConnectionResult(endpointId: String, resolution: ConnectionResolution) {
@@ -190,7 +193,7 @@ class NearbyLifecycleImpl(
     }
 
     private companion object {
-        const val TAG = "ConnectionLifecycleCallbackImpl"
+        const val TAG = "NearbyConnection"
         val STRATEGY = Strategy.P2P_POINT_TO_POINT
     }
 }
